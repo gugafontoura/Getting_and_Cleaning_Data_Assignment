@@ -1,9 +1,3 @@
-When running run_analysis.R script, as output, it will return 3 different archives on your computer, all located in data paste on working directory: 
-        - The archive "q5.txt" will meets the requirements of question 5.
-        - The archive "q2.txt" will meets the requirements of question 2.
-        - The archive "qn1n3n4.txt" will meets the requirements of question 1, 3 and 4.
-                * For archive "qn1n3n4.txt" notice that requirements were accomplished in the various stages that data was submitted too. It's important to appoint, also, that columns were named according to data producer, as it's specified in the archives on "~/data/UCI HAR Dataset". This step was accomplished with the script used to collect and firstly clean the data (as described bellow). 
-
 Each observation of final dataset, is the result of one Training or Testing experiment. So, in this case, variables can be divided by two groups:         
         1. The ones specified by data resourcer: as explained in the archive "~/data/UCI HAR Dataset/README.txt"
         2. The ones created by the analist, as the questions pointed too, arranged alphabetically below:

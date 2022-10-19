@@ -1,120 +1,125 @@
-Each observation of final dataset, is the result of one Training or Testing experiment. So, in this case, variables can be divided by two groups:         
-        1. The ones specified by data resourcer: as explained in the archive "~/data/UCI HAR Dataset/README.txt"
-        2. The ones created by the analist, as the questions pointed too, arranged alphabetically below:
-                + Variables increased on the resulting data set
-                        activityLabel - Describes which kind of activities was being done in the experiment registered, as it was originally    registred by data producer
-                                
-                                Values: 1 for WALKING
-                                        2 for WALKING_UPSTAIRS
-                                        3 for WALKING_DOWNSTAIRS
-                                        4 for SITTING
-                                        5 for STANDING
-                                        6 for LAYING
-                                
-                                                Integer
-                        
-                        activityLabelDesc - Describes which kind of activities was being done in the experiment registered
-                                
-                                Values: WALKING
-                                        WALKING_UPSTAIRS
-                                        WALKING_DOWNSTAIRS
-                                        SITTING
-                                        STANDING
-                                        LAYING
-                                
-                                                String as Factor
-                        
-                        subject - Number that idetifies whose was the volunteer of the registered experiment
-                                
-                                Values: 1 to 30 
-                                
-                                                Integer 
-                                
-                        type - Describes if it refers to a train or a test experiment
-                                
-                                Value: Train or Test
-                                
-                                                String as Factor
-                
-                + Variables resulting from running the script
-                        
-                        activities - Dataframe of the activities and its refered code
-                        
-                        averages - Dataframe of the average of each variable for each activity and each subject
-                
-                        data - merged an tidy dataframe containing train and test registers
-                        
-                        stdmeandata - Dataframe containing only std and mean registers, plus the general identification of the registred experiment
-                        
-                        stdmeandt - Dataframe containing only std and mean registers
-                        
-                        test - tidy dataframe containaing test registers
-                        
-                        train - tidy dataframe containaing train registers
+At first, data was collected and pre-prepared for questions with the created function "receive_data()". 
+In general, it retrieves the data from the given link, downloads it, retrieves Train and Test data, and returns it as variables to be used in the main script, by a list datavars, within other important variables for evaluating the whole data set. 
+The script was available at "receive_data.R" archive. 
+ 
+Step-by-step data manipulation:
 
+- The biggest majority of functions used in that analysis were from dplyr package: 
+        
+                library(dplyr)
 
-The data was collected and initially prepared, as some variables for run_analysis, by the function preparedata() on script preparedata.R. 
-The whole script of the funtcion is diposed bellow: 
+- At first, to facilitate use of DIR related attributes, variables we're setted for DIR and Downloaded file, in that step the archive was also downloaded, as the package was unzipped
+        
+                ## CREATES TRACEABLE DIR 
+                datadir <- paste0(getwd(), "/data")
+                dir.create(datadir)
+                
+                ## CREATES AND DOWNLOAD TRACEABALE FILE 
+                datazipfile <- paste0(datadir, "/data.zip")
+                if(!file.exists(datazipfile)){
+                        download.file("https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip", datazipfile)}
+                
+                ## UNZIP FILES
+                setwd(datadir)
+                unzip(datazipfile)
+                setwd("..")
+        
+- As was informed on "README.txt", of the downloaded data, each columns of data was given by "features.txt" archive. In this step this data was read, transformed into a vector, and also was appended by other variable names that are gonna be used in next steps 
+        
+                features <- read.table(paste0(datadir, "/UCI HAR Dataset/features.txt"))
+                features <- c(as.vector(features$V2), "activityLabel", "subject", "type")
+        
+- Just like the first step, variables for DIR were Train and Test data was specified 
+        
+                traindir <- paste0(getwd(),"/data/UCI HAR Dataset/train")
+                testdir <- paste0(getwd(),"/data/UCI HAR Dataset/test")
+        
+- Preparing Tests and Trains datasets were the result of similar stages. 
+                
+                # At first, i read the subject files, containing the ID that identifies each participant of the experiment.
+        
+                        subject_train <- unlist(as.vector(read.table(paste0(traindir, "/subject_train.txt"))))
+                        subject_train <- factor(subject_train, c(1:30))
+                
+                        subject_test <- unlist(as.vector(read.table(paste0(testdir, "/subject_test.txt"))))
+                        subject_test <- factor(subject_test, c(1:30))
 
-        library(dplyr)
+.
+
+                # Second, variables indicating the activity for each record, in Y file, are readed. 
+
+                        y_train <- unlist(as.vector(read.table(paste0(traindir, "/y_train.txt"))))
+                        y_test <- unlist(as.vector(read.table(paste0(testdir, "/y_test.txt"))))
         
-        #creates a traceable dir for data in project folder
-        datadir <- paste0(getwd(), "/data")
-        dir.create(datadir)
-        
-        #creates and download traceable file for data in project folder
-        datazipfile <- paste0(datadir, "/data.zip")
-        download.file("https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip", datazipfile)
-        
-        #unzip files 
-        setwd(datadir)
-        unzip(datazipfile)
-        setwd("..")
-        
-        #retrieve measured features for columns 
-        features <- read.table(paste0(datadir, "/UCI HAR Dataset/features.txt"))
-        features <- c(as.vector(features$V2), "activityLabel", "subject", "type")
-        
-        #set train and test data dir 
-        traindir <- paste0(getwd(),"/data/UCI HAR Dataset/train")
-        testdir <- paste0(getwd(),"/data/UCI HAR Dataset/test")
-        
-        #prepare train data set
-        
-                #read subjects as vector
-                subject_train <- unlist(as.vector(read.table(paste0(traindir, "/subject_train.txt"))))
-        
-                #read activities labels as vector
-                y_train <- unlist(as.vector(read.table(paste0(traindir, "/y_train.txt"))))
-        
-                #read train data
-                x_train <- as_tibble(read.table(paste0(traindir, "/X_train.txt")))
-        
-                #join all data
-                train <- mutate(x_train, activityLabel = as.factor(y_train), subject = as.factor(subject_train), type = "train")
+.
+
+                # Third, the registers of the experiment for each record, in X file, are readed.
+
+                        x_train <- as_tibble(read.table(paste0(traindir, "/X_train.txt")))
+                        x_test <- as_tibble(read.table(paste0(testdir, "/X_test.txt")))
+                        
+.
+
+                # Merge all infos together, from X tables, within Y tables, subject tables and the variable type indicating if it refers to a "TRAIN" register or a "TEST" register
                 
-                #clean variables
-                rm(subject_train, y_train, x_train)
+                        train <- mutate(x_train, activityLabel = y_train, subject = subject_train, type = "TRAIN")
+                        test <- mutate(x_test, activityLabel = y_test, subject = subject_test, type = "TEST")
                 
-                #name columns (with make names to add suffix to duplicated names)
-                colnames(train) <- make.names(features, unique=TRUE)
+.
+
+                # Remove variables that wont't be used anymore
                 
-        #prepare test data set 
+                        rm(subject_train, y_train, x_train)
+                        rm(subject_test, y_test, x_test)
+                
+.
+
+                # Add columns names for both "train" and "test" datasets. Since were found duplicated column names, attribute unique was set to TRUE, adding suffix to duplicated names
+                
+                        colnames(train) <- make.names(features, unique=TRUE)    
+                        colnames(test) <- make.names(features, unique=TRUE)
+                        
+- Assign to a list variables that will be used in the "run_analysis()" script
+                
+                datavars <- list(test = test, train = train, datadir = datadir)
+
+As result of that function, i will be returne with values for: 
+        - test: Test registers properly column named, within subject and activity data. 
+        - train: Train registers properly column named, within subject and activity data. 
+        - datadir: The specified dir for saving data (hereafter for saving output from run_analysis.R)
         
-                #read subjects as vector
-                subject_test <- unlist(as.vector(read.table(paste0(testdir, "/subject_test.txt"))))
-                
-                #read activities labels as vector
-                y_test <- unlist(as.vector(read.table(paste0(testdir, "/y_test.txt"))))
-                
-                #read test data
-                x_test <- as_tibble(read.table(paste0(testdir, "/X_test.txt")))
-        
-                #join all data
-                test <- mutate(x_test, activityLabel = as.factor(y_test), subject = as.factor(subject_test), type = "test")
-        
-                #clean variables
-                rm(subject_test, y_test, x_test)
-                
-                #name columns (with make names to add suffix to duplicated names)
-                colnames(test) <- make.names(features, unique=TRUE)
+About variables at outputted datasets, it's important to tell that, differing from original variables (available on "~/data/UCI HAR Dataset/features_info.txt"), are the above:
+
+                    
+                    activityLabel - Describes which kind of activities was being done in the experiment registered
+                            
+                            Values: 1 for WALKING
+                                    2 for WALKING_UPSTAIRS
+                                    3 for WALKING_DOWNSTAIRS
+                                    4 for SITTING
+                                    5 for STANDING
+                                    6 for LAYING
+                                            Integer
+
+                            -- refactored at line 20 of "run_analysis.R"--        
+                            Values: WALKING
+                                    WALKING_UPSTAIRS
+                                    WALKING_DOWNSTAIRS
+                                    SITTING
+                                    STANDING
+                                    LAYING
+                            
+                                            String
+                    
+                    subject - Number that idetifies whose was the volunteer of the registered experiment
+                            
+                            Values: 1 to 30 
+                            
+                                            Integer 
+                            
+                    type - Describes if it refers to a train or a test experiment
+                            
+                            Value: Train or Test
+                            
+                                            String as Factor
+
